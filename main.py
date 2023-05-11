@@ -7,7 +7,7 @@ from utils.utils import *
 from solver import Solver
 
 
-def str2bool(v):
+def str2bool(v): 
     return v.lower() in ('true')
 
 
@@ -23,7 +23,7 @@ def main(config):
         solver.test()
 
     return solver
-
+#gtx 2080 ti
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

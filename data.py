@@ -10,14 +10,14 @@ class StockLoader(Dataset):
         self.step = step
         self.win_size = win_size
         self.scaler = StandardScaler()
-        data = pd.read_csv(data_path + '/train.csv', encoding='euc-kr')
+        data = pd.read_csv(data_path + '/train.csv', encoding='utf-8')
         data = data.values[:, 1:]
 
         data = np.nan_to_num(data)
 
         self.scaler.fit(data)
         data = self.scaler.transform(data)
-        test_data = pd.read_csv(data_path + '/test.csv', encoding='euc-kr')
+        test_data = pd.read_csv(data_path + '/test.csv', encoding='utf-8')
 
         test_data = test_data.values[:, 1:]
         test_data = np.nan_to_num(test_data)
@@ -27,7 +27,7 @@ class StockLoader(Dataset):
         self.train = data
         self.val = self.test
 
-        self.test_labels = pd.read_csv(data_path + '/test_label.csv', encoding='euc-kr').values[:, 1:]
+        self.test_labels = pd.read_csv(data_path + '/test_label.csv', encoding='utf-8').values[:, 1:]
 
         print("test:", self.test.shape)
         print("train:", self.train.shape)
