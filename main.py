@@ -14,7 +14,7 @@ def str2bool(v):
 def main(config):
     cudnn.benchmark = True
     if (not os.path.exists(config.model_save_path)):
-        mkdir(config.model_save_path)
+        mkdir(config.model_save_path) 
     solver = Solver(vars(config))
 
     if config.mode == 'train':
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained_model', type=str, default=None)
     parser.add_argument('--dataset', type=str, default='credit')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
-    parser.add_argument('--data_path', type=str, default='./samsungelectronic')
+    parser.add_argument('--data_path', type=str, default='./data')
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--anormly_ratio', type=float, default=4.00)
 

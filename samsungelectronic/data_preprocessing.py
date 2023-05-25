@@ -6,7 +6,7 @@ import yfinance as yfin
 
 yfin.pdr_override()
 
-data = ['train', 'train_label', 'test', 'test_label']
+strategy = ['RSI', 'MACD']
 start = datetime.date(2000, 1, 1)
 end = datetime.date(2022, 12, 31)
 samsungelectronic = pdr.get_data_yahoo("005930.KS", start, end)
@@ -27,27 +27,26 @@ df["MACD_oscillator"] = df.apply(lambda x:(x["MACD"] - x["MACD_signal"]), axis =
 # welles moving average
 df['AU'] = df['상승폭'].ewm(alpha = 1/14, min_periods = 14).mean()
 df['AD'] = df['하락폭'].ewm(alpha = 1/14, min_periods = 14).mean()
-# df['RS'] = df['AU'] / df['AD']
-# df['RSI'] = 100 - (100 / (1 + df['RS']))
 df['RSI'] = df['AU'] / (df['AU'] + df['AD']) * 100
-df[['RSI']].tail(n = 10)
+
+# 매수/매도 by MACD(0 돌파 시 매수/매도)
+df["MACD_sign"] = df.apply(lambda x: ("매수" if x["MACD"]<x["MACD_signal"] else "매도"), axis=1)
+
+# 매수/매도 by MACD oscillator(0 돌파 시 매수/매도)
+#df["MACD_oscillator_sign"] = df.apply(lambda x: ("매수" if x["MACD"]>x["MACD_signal"] else "매도"), axis=1)
+
+# 매수/매도 by RSI 30 70 (30 전환 시 매수, 70 전환 시 매도)
+df["RSI_sign"] = df.apply(lambda x: ("매수" if x["RSI"]<50 else "매도"), axis=1)
 
 df = df.sort_index(axis=1)
 
-for x in data:
-    if x=='train':
-        k = df.truncate(after='2020-01-01', axis=0)
-        k = k.truncate(after='Volume',axis=1)
-    elif x=='train_label':
-        k = df.truncate(after='2020-01-01', axis=0)
-        k = k.truncate(before='RSI',axis=1)
-    elif x=='test':
-        k = df.truncate(before='2020-01-01', axis=0)
-        k = k.truncate(after='Volume',axis=1)
-    else:
-        k = df.truncate(before='2020-01-01', axis=0)
-        k = k.truncate(before='RSI',axis=1)
-    
+for x in strategy:
+    if x=='RSI':
+        k = df[['Close', 'RSI', 'RSI_sign']]
+    elif x=='MACD':
+        k = df[['Close', 'MACD', "MACD_sign"]]
+    # else :
+    #     k = df[['Close', 'MACD_oscillator', "MACD_oscillator_sign"]]
+
     k = k.dropna()
-    
-    k.to_csv(f"C:/Users/SLOWLAB/.conda/anomaly_transformer_in_stock_market/samsungelectronic/RSI_{x}.csv")
+    k.to_csv(f"C:/Users/SLOWLAB/.conda/anomaly_transformer_in_stock_market/data/{x}.csv")
