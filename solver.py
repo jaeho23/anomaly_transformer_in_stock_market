@@ -7,7 +7,7 @@ import time
 from utils.utils import *
 from model.AnomalyTransformer import AnomalyTransformer
 from data import get_loader_segment
-
+import pandas as pd
 
 def my_kl_loss(p, q):
     res = p * (torch.log(p + 0.0001) - torch.log(q + 0.0001))
@@ -213,7 +213,7 @@ class Solver(object):
 
         print("======================TEST MODE======================")
 
-        criterion = nn.MSELoss(reduce=False)
+        criterion = nn.MSELoss(reduction='none')
 
         # (1) stastic on the train set
         attens_energy = []
@@ -223,6 +223,7 @@ class Solver(object):
             loss = torch.mean(criterion(input, output), dim=-1)
             series_loss = 0.0
             prior_loss = 0.0
+            
             for u in range(len(prior)):
                 if u == 0:
                     series_loss = my_kl_loss(series[u], (
@@ -251,7 +252,7 @@ class Solver(object):
 
         # (2) find the threshold
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels) in enumerate(self.train_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
@@ -287,11 +288,11 @@ class Solver(object):
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
         thresh = np.percentile(combined_energy, 100 - self.anormly_ratio)
         print("Threshold :", thresh)
-
+        
         # (3) evaluation on the test set
         test_labels = []
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels) in enumerate(self.test_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
@@ -327,9 +328,8 @@ class Solver(object):
         test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
         test_labels = np.array(test_labels)
-
+        
         pred = (test_energy > thresh).astype(int)
-
         gt = test_labels.astype(int)
 
         print("pred:   ", pred.shape)
@@ -362,11 +362,14 @@ class Solver(object):
         print("pred: ", pred.shape)
         print("gt:   ", gt.shape)
 
+        np.savetxt("predict.csv", pred, delimiter=",")
+        np.savetxt("gt.csv", gt, delimiter=",")
+        
         from sklearn.metrics import precision_recall_fscore_support
         from sklearn.metrics import accuracy_score
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred,
-                                                                              average='binary')
+                                                                              average='micro')
         print(
             "Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
                 accuracy, precision,

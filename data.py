@@ -27,7 +27,7 @@ class StockLoader(Dataset):
         self.train = data
         self.val = self.test
 
-        self.test_labels = pd.read_csv(data_path + '/test_label.csv', encoding='utf-8').values[:, 1:]
+        self.test_labels = pd.read_csv(data_path + '/test_label.csv', encoding='utf-8').values[:, :]
 
         print("test:", self.test.shape)
         print("train:", self.train.shape)
@@ -59,7 +59,7 @@ class StockLoader(Dataset):
                               index // self.step * self.win_size:index // self.step * self.win_size + self.win_size]), np.float32(
                 self.test_labels[index // self.step * self.win_size:index // self.step * self.win_size + self.win_size])
 
-def get_loader_segment(data_path, batch_size, win_size=100, step=100, mode='train', dataset='KDD'):
+def get_loader_segment(data_path, batch_size, win_size=3, step=3, mode='train', dataset='KDD'):
     dataset = StockLoader(data_path, win_size, step, mode)
     
     shuffle = False
